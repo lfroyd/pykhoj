@@ -4,8 +4,8 @@ import MainWindow
 
 def main():
     app = QApplication(sys.argv)
-    # app.setOrganizationName("Qtrac Ltd.")
-    # app.setOrganizationDomain("qtrac.eu")
+    # app.setOrganizationName("NTNU - Waterpower Laboratory / KU - Turbine Testing Lab")
+    # app.setOrganizationDomain("https://gitlab.com/khoj/pykhoj")
     app.setApplicationName("Khoj 2016")
     #app.setWindowIcon(QIcon(":/icon.png"))
     window = MainWindow.Window()

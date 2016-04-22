@@ -33,13 +33,6 @@ class Blade(QtCore.QObject):
         self.np = int(30)
 
 
-
-        # self.ns = 10#param('Design Parameters').param('Meridional View').param('Number of streamlines').value()
-        # self.D1 = 0.86#params.param('Design Parameters').param('Meridional View').param('Inlet diameter D1').value()
-        # self.D2 = 0.5#params.param('Design Parameters').param('Meridional View').param('Outlet diameter D1').value()
-        # self.b = 0.17#params.param('Design Parameters').param('Meridional View').param('Shroud height b').value()
-        # self.B1 = 0.1#params.param('Design Parameters').param('Meridional View').param('Inlet height B1').value()
-
     def setPlotAxes(self,axes):
         self.avAxis = axes['Axial View'].axes
         self.avCanvas = self.avAxis.figure.canvas
@@ -65,9 +58,11 @@ class Blade(QtCore.QObject):
         self.initAcceleration()
         self.initBetaDistribution()
 
+
     def setDocks(self,docks):
         self.axialViewDock = docks['Axial View']
         self.triangleDock = docks['Triangles']
+
 
     def rebuildBlade(self, params):
         self.ns = params.param('Design Parameters').param('Meridional View').param('Number of streamlines').value()
@@ -79,7 +74,6 @@ class Blade(QtCore.QObject):
         self.CM1 = params.param('Design Parameters').param('Reduced Velocities').param('CM1_red').value() * params.red
         self.CM2 = params.param('Design Parameters').param('Reduced Velocities').param('CM2_red').value() * params.red
         self.omega = params.param('Design Parameters').param('Machine Data').param('Rotor speed').value() * np.pi/30.
-
 
         self.Zmat = np.zeros(shape=(self.np,self.ns))
         self.Rmat = np.zeros(shape=(self.np,self.ns))
@@ -213,6 +207,7 @@ class Blade(QtCore.QObject):
             self.calcGHplane()
             self.updateGHplane()
             self.updateRadialView()
+
 
     def betaChanged(self, isChanged):
         if isChanged:
@@ -399,23 +394,4 @@ class Blade(QtCore.QObject):
     #     return markx, marky
 
 
-
-if __name__ == "__main__":
-    fig = plt.figure()
-    ax = fig.add_subplot(111, aspect='equal')
-    b = Blade(ax)
-
-    p1 = 0
-    if p1 == 0:
-        for i in range(0,b.ns):
-            ax.plot(b.Rmat[:,i],b.Zmat[:,i],color='blue')
-            # inlet = ax.plot(b.Rmat[:,1],b.Zmat[:,1],'o',color='red')
-            # inlet = ax.plot(b.Rmat[:,2],b.Zmat[:,2],'o',color='green')
-    elif p1 == 1:
-        ax = fig.add_subplot(111)
-        ax.plot(b.dAx,b.Avect)
-
-
-
-    plt.show()
 

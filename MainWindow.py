@@ -258,19 +258,19 @@ class Window(QtGui.QMainWindow):
     def fileNew(self):
         if not self.okToContinue():
             return
-        dialog = newimagedlg.NewImageDlg(self)
-        if dialog.exec_():
-            self.addRecentFile(self.filename)
-            self.image = QtGui.QImage()
-            for action, check in self.resetableActions:
-                action.setChecked(check)
-            self.image = dialog.image()
-            self.filename = None
-            self.dirty = True
-            self.showImage()
-            self.sizeLabel.setText("{0} x {1}".format(self.image.width(),
-                                                      self.image.height()))
-            self.updateStatus("Created new image")
+        # dialog = newimagedlg.NewImageDlg(self)
+        # if dialog.exec_():
+        #     self.addRecentFile(self.filename)
+        #     self.image = QtGui.QImage()
+        #     for action, check in self.resetableActions:
+        #         action.setChecked(check)
+        #     self.image = dialog.image()
+        #     self.filename = None
+        #     self.dirty = True
+        #     self.showImage()
+        #     self.sizeLabel.setText("{0} x {1}".format(self.image.width(),
+        #                                               self.image.height()))
+        #     self.updateStatus("Created new image")
 
 
     def fileOpen(self):
@@ -289,33 +289,33 @@ class Window(QtGui.QMainWindow):
         #     self.loadFile(fname)
 
 
-    def loadFile(self, fname=None):
-        if fname is None:
-            action = self.sender()
-            if isinstance(action, QtGui.QAction):
-                fname = unicode(action.data().toString())
-                if not self.okToContinue():
-                    return
-            else:
-                return
-        if fname:
-            self.filename = None
-            image = QtGui.QImage(fname)
-            if image.isNull():
-                message = "Failed to read {0}".format(fname)
-            else:
-                self.addRecentFile(fname)
-                self.image = QtGui.QImage()
-                for action, check in self.resetableActions:
-                    action.setChecked(check)
-                self.image = image
-                self.filename = fname
-                self.showImage()
-                self.dirty = False
-                self.sizeLabel.setText("{0} x {1}".format(
-                                       image.width(), image.height()))
-                message = "Loaded {0}".format(os.path.basename(fname))
-            self.updateStatus(message)
+    # def loadFile(self, fname=None):
+    #     if fname is None:
+    #         action = self.sender()
+    #         if isinstance(action, QtGui.QAction):
+    #             fname = unicode(action.data().toString())
+    #             if not self.okToContinue():
+    #                 return
+    #         else:
+    #             return
+    #     if fname:
+    #         self.filename = None
+    #         image = QtGui.QImage(fname)
+    #         if image.isNull():
+    #             message = "Failed to read {0}".format(fname)
+    #         else:
+    #             self.addRecentFile(fname)
+    #             self.image = QtGui.QImage()
+    #             for action, check in self.resetableActions:
+    #                 action.setChecked(check)
+    #             self.image = image
+    #             self.filename = fname
+    #             self.showImage()
+    #             self.dirty = False
+    #             self.sizeLabel.setText("{0} x {1}".format(
+    #                                    image.width(), image.height()))
+    #             message = "Loaded {0}".format(os.path.basename(fname))
+    #         self.updateStatus(message)
 
 
     def addRecentFile(self, fname):
@@ -363,37 +363,37 @@ class Window(QtGui.QMainWindow):
         # return False
 
 
-    def filePrint(self):
-        if self.image.isNull():
-            return
-        if self.printer is None:
-            self.printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
-            self.printer.setPageSize(QtGui.QPrinter.Letter)
-        form = QtGui.QPrintDialog(self.printer, self)
-        if form.exec_():
-            painter = QtGui.QPainter(self.printer)
-            rect = painter.viewport()
-            size = self.image.size()
-            size.scale(rect.size(), QtCore.Qt.KeepAspectRatio)
-            painter.setViewport(rect.x(), rect.y(), size.width(),
-                                size.height())
-            painter.drawImage(0, 0, self.image)
+    # def filePrint(self):
+    #     if self.image.isNull():
+    #         return
+    #     if self.printer is None:
+    #         self.printer = QtGui.QPrinter(QtGui.QPrinter.HighResolution)
+    #         self.printer.setPageSize(QtGui.QPrinter.Letter)
+    #     form = QtGui.QPrintDialog(self.printer, self)
+    #     if form.exec_():
+    #         painter = QtGui.QPainter(self.printer)
+    #         rect = painter.viewport()
+    #         size = self.image.size()
+    #         size.scale(rect.size(), QtCore.Qt.KeepAspectRatio)
+    #         painter.setViewport(rect.x(), rect.y(), size.width(),
+    #                             size.height())
+    #         painter.drawImage(0, 0, self.image)
 
 
 
-    def helpAbout(self):
-        QtGui.QMessageBox.about(self, "About Khoj",
-                """<b>Khoj</b> v {0}
-                <p>Copyright &copy; 2012-16 NTNU.
-                All rights reserved.
-                <p>This application can be used for
-                preliminary design of Francis turbines.
-                <p>Python {1} - Qt {2} - PyQt {3} on {4}""".format(
-                __version__, platform.python_version(),
-                QtCore.QT_VERSION_STR, QtCore.PYQT_VERSION_STR,
-                platform.system()))
+    # def helpAbout(self):
+    #     QtGui.QMessageBox.about(self, "About Khoj",
+    #             """<b>Khoj</b> v {0}
+    #             <p>Copyright &copy; 2012-16 NTNU.
+    #             All rights reserved.
+    #             <p>This application can be used for
+    #             preliminary design of Francis turbines.
+    #             <p>Python {1} - Qt {2} - PyQt {3} on {4}""".format(
+    #             __version__, platform.python_version(),
+    #             QtCore.QT_VERSION_STR, QtCore.PYQT_VERSION_STR,
+    #             platform.system()))
 
 
-    def helpHelp(self):
-        form = helpform.HelpForm("index.html", self)
-        form.show()
+    # def helpHelp(self):
+    #     form = helpform.HelpForm("index.html", self)
+    #     form.show()
