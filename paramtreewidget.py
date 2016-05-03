@@ -47,10 +47,10 @@ class DesignParameters(QtGui.QWidget):
         self.params.sigTreeStateChanged.connect(self.treeChanged)
 
         ## read list of preset configs
-        presetDir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'presets')
-        if os.path.exists(presetDir):
-            presets = [os.path.splitext(p)[0] for p in os.listdir(presetDir)]
-            self.params.param('Load Preset..').setLimits(['']+presets)
+        # presetDir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'presets')
+        # if os.path.exists(presetDir):
+        #     presets = [os.path.splitext(p)[0] for p in os.listdir(presetDir)]
+        #     self.params.param('Load Preset..').setLimits(['']+presets)
 
 
 
@@ -77,7 +77,7 @@ class DesignParameters(QtGui.QWidget):
 
 
     def save(self):
-        fn = str(pg.QtGui.QFileDialog.getSaveFileName(self, "Save State..", "untitled.cfg", "Config Files (*.cfg)"))
+        fn = str(pg.QtGui.QFileDialog.getSaveFileName(self, "Save turbine..", "untitled.cfg", "Config Files (*.cfg)"))
         if fn == '':
             return
         state = self.params.saveState()
@@ -85,12 +85,14 @@ class DesignParameters(QtGui.QWidget):
 
 
     def load(self):
-        fn = str(pg.QtGui.QFileDialog.getOpenFileName(self, "Save State..", "", "Config Files (*.cfg)"))
+        fn = str(pg.QtGui.QFileDialog.getOpenFileName(self, "Load turbine..", "", "Config Files (*.cfg)"))
         if fn == '':
             return
         self.stateLoaded = False
         state = pg.configfile.readConfigFile(fn)
         self.loadState(state)
+
+
 
 
     def loadPreset(self, param, preset):
@@ -111,6 +113,15 @@ class DesignParameters(QtGui.QWidget):
         self.reconnect()
         self.updateFinished = True
         self.needsUpdate = True
+
+        ## Initialize or reset Blade control curves
+        if self.blade.accCurve is None:
+            self.blade.initAcceleration()
+            self.blade.initBetaDistribution()
+        else:
+            self.blade.resetAcceleration()
+            self.blade.resetBetaDistribution()
+
         self.recalculate()
         self.dirty = False
 
@@ -176,22 +187,22 @@ class DesignParameters(QtGui.QWidget):
         self.params.blockSignals(False)
 
 
-    def setDocks(self, docks):
-        self.blade.setDocks(docks)
-
-
     def dockVisibilityChanged(self):
         print('dock changed')
 
 
-    def setPlotAxes(self,axes):
-        self.triangleAxis = axes['Triangles'].axis
-        self.blade.setPlotAxes(axes)
+    def setPlotAxes(self,dockWidgetDict):
+        self.triangleAxis = dockWidgetDict['Triangles'][0].axis
+        self.blade.setPlotAxes(dockWidgetDict)
+        self.initializeTriangles()
+
+    def initializeTriangles(self):
+        """ Initialize velocity triangle figure """
         self.inletTriangle = Triangle()
         self.triangleAxis.addItem(self.inletTriangle)
         self.outletTriangle = Triangle()
         self.triangleAxis.addItem(self.outletTriangle)
-        ## Define the set of connections in the graph
+        ## Define the set of connections in each graph
         self.adj_inlet = np.array([[0,1], [1,2], [2,3], [1,3], [0,3]])
         self.adj_outlet = np.array([[0,1], [1,2], [0,2]])
 
@@ -253,7 +264,6 @@ class DesignParameters(QtGui.QWidget):
         self.outletTriangle.setData(pos=pos_outlet, adj=self.adj_outlet, size=0.01, symbol='o', pxMode=False, drag = self.drags_outlet, dep = self.deps_outlet) #pen=None, text=self.texts_outlet
 
 
-
     def rotorSpeedChanges(self):
         self.rotorSpeed.setValue(self.gridFreq.value()*60/float(self.polePairs.value()))
         self.U1_redChanged()
@@ -307,9 +317,8 @@ class DesignParameters(QtGui.QWidget):
         if self.blade is not None:
             if 1: #self.needsUpdate:
                 self.calcReducedVelocities()
-                self.blade.rebuildBlade(self.params)
-                self.blade.updateAxialView()
-                self.blade.updateGHplane()
+                self.blade.readParams(self.params)
+                self.blade.rebuildBlade()
                 self.updateTriangles()
                 self.needsUpdate = False
         else:

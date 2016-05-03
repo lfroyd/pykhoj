@@ -4,13 +4,16 @@ from matplotlib.lines import Line2D
 import numpy as np
 
 class BezierBuilder(QtCore.QObject):
-    """Bezier curve interactive builder.
+    """ CLASS - Interactive bezier curve (add/remove points(ctrl-click), drag individual points or entire curve)
+        Update curve while the points are being dragged, and emit a signal when a drag/change is finished
+        Based on and expanded from Source: https://gist.github.com/Juanlu001/7284462
     """
     changed = QtCore.pyqtSignal(bool)
 
-    def __init__(self,control_polygon,ax,points,linedrag=False,fixpoints=None):
-        """Constructor.
-        Receives the initial control polygon of the curve, the figure axis, and the number of curve points.
+    def __init__(self,control_polygon,ax,points,linedrag=False,fixpoints=[]):
+        """
+        Receives the initial control polygon of the curve, the figure axis, the number of curve points,
+        Defines whether the bezier curve itself can be dragged, and which control points cannot be dragged.
         """
         QtCore.QObject.__init__(self)
 
@@ -25,6 +28,7 @@ class BezierBuilder(QtCore.QObject):
         self.np = points
         self.lineDrag = linedrag
         self.fixPoints = fixpoints
+        self.isRemoved = False
 
         # Event handler for mouse and keyboard interaction
         self.canvas.mpl_connect('button_press_event', self.on_button_press)
@@ -37,6 +41,7 @@ class BezierBuilder(QtCore.QObject):
         line_bezier = Line2D([], [], c=control_polygon.get_markeredgecolor())
         self.bezier_curve = self.axis.add_line(line_bezier)
 
+        self.changeFinished = False
         self._shift_is_held = False
         self._ctrl_is_held = False
         self._alt_is_held = False
@@ -58,6 +63,7 @@ class BezierBuilder(QtCore.QObject):
 
 
     def resetBezier(self, xp, yp):
+        """ Set or Reset bezier curve according to input x,y control point coordinates"""
         self.xp = xp
         self.yp = yp
         self.control_polygon.set_data(self.xp, self.yp)
@@ -66,7 +72,8 @@ class BezierBuilder(QtCore.QObject):
 
 
     def on_button_press(self, event):
-        # Ignore clicks outside axes
+        """ Control what happens when mouse button is pressed """
+        ## Ignore clicks outside axes
         if event.inaxes != self.axis: return
         self.xclick = event.xdata
         self.yclick = event.ydata
@@ -74,7 +81,6 @@ class BezierBuilder(QtCore.QObject):
         self.yp0 = self.yp
 
         res, ind = self.control_polygon.contains(event)
-
 
         if res:
             self._index = int(ind['ind'][0])
@@ -102,25 +108,34 @@ class BezierBuilder(QtCore.QObject):
 
 
     def on_button_release(self, event):
+        """ Control what happens when mouse button is released """
         if event.button != 1: return
         self._index = None
         self._index2 = None
         self._dragAll = False
 
+        if not self._ctrl_is_held:
+            self.changeFinished = True
+        self._update_bezier()
 
     def on_key_press(self, event):
+        """ Control what happens when keyboard button is pressed """
         if event.key == 'control':
             self._ctrl_is_held = True
+            self.changeFinished = False
 
 
     def on_key_release(self, event):
+        """ Control what happens when keyboard button is released """
         if event.key == 'control':
             self._ctrl_is_held = False
             if len(self.xp)>0:
                 self.isFirstDef = False
-
+        self.changeFinished = True
+        self._update_bezier()
 
     def on_motion_notify(self, event):
+        """ Control how control points are dragged """
         if self._ctrl_is_held:
             return
         if event.inaxes != self.axis: return
@@ -140,10 +155,12 @@ class BezierBuilder(QtCore.QObject):
         else:
             return
         self.control_polygon.set_data(self.xp, self.yp)
+        self.changeFinished = False
         self._update_bezier()
 
 
     def _add_point(self, event):
+        """ Add contrl point """
         if self._index is None and self.isFirstDef:
             self.xp.append(event.xdata)
             self.yp.append(event.ydata)
@@ -152,57 +169,63 @@ class BezierBuilder(QtCore.QObject):
         else:
             self.xp.insert(self._index+1,event.xdata)
             self.yp.insert(self._index+1,event.ydata)
+            self.changeFinished = True
         self.control_polygon.set_data(self.xp, self.yp)
 
-        # Rebuild Bezier curve and update canvas
+        ## Rebuild Bezier curve and update canvas
         self._update_bezier()
 
 
     def _remove_point(self, event):
+        """ Remove control point """
         if self._index is not None:
             self.xp.pop(self._index)
             self.yp.pop(self._index)
             self.control_polygon.set_data(self.xp, self.yp)
 
-            # Rebuild Bezier curve and update canvas
+            ## Rebuild Bezier curve and update canvas
+            self.changeFinished = True
             self._update_bezier()
 
+
     def _build_bezier(self):
+        """ Call self.Bezier, return x,y coordinates of bezier curve """
         x, y = self.Bezier(list(zip(self.xp, self.yp))).T
         return x, y
 
 
     def remove(self):
+        """ Remove bezier curve (set empty data to hide curve) """
         self.xp = []
         self.yp = []
         self.control_polygon.set_data(self.xp, self.yp)
+        self.isRemoved = True
+        self.changeFinished = True
         self._update_bezier()
 
 
+
     def _update_bezier(self):
+        """ Update bezier curve when control points changed"""
         self.bezier_curve.set_data(self._build_bezier())
         self.canvas.flush_events()
         self.axis.draw_artist(self.bezier_curve)
         self.axis.draw_artist(self.control_polygon)
         self.canvas.update()
         self.canvas.draw()
-        self.changed.emit(True)
+        self.changed.emit(self.changeFinished)
 
 
     def Bernstein(self,n, k):
-        """Bernstein polynomial.
-        """
+        """ Calculate Bernstein polynomial """
         coeff = binom(n, k)
-
         def _bpoly(x):
             return coeff * x ** k * (1 - x) ** (n - k)
-
         return _bpoly
 
 
-    def Bezier(self,points):#, num=200):
-        """Build Bezier curve from points.
-        """
+    def Bezier(self,points):
+        """ Build Bezier curve from control points """
         num = self.np
         N = len(points)
         t = np.linspace(0, 1, num=num)

@@ -13,10 +13,8 @@ from pyqtgraph.dockarea import *
 from paramtreewidget import DesignParameters
 import plotwidgets
 from blades import Blade
-# from params import Param
 
-
-__version__ = "1.0.0"
+__version__ = "0.0.1"
 
 
 class Window(QtGui.QMainWindow):
@@ -26,13 +24,16 @@ class Window(QtGui.QMainWindow):
         self.params = None
         super(Window, self).__init__(parent)
         self.filename = None
-        self.create_widgets()
-        self.create_actions()
-        self.load_settings()
+        ## TODO: Find out how singleshot actually works and implement it so that the GUI window launches faster
         self.setWindowTitle("Khoj 2016")
         self.setWindowState(QtCore.Qt.WindowMaximized)
+        QtCore.QTimer.singleShot(0,self.create_widgets)
+        self.create_actions()
+        self.load_settings()
 
-        QtCore.QTimer.singleShot(0, self.loadInitialFile)
+
+    def test(self):
+        pass
 
     def create_widgets(self):
         self.area = DockArea()
@@ -41,53 +42,48 @@ class Window(QtGui.QMainWindow):
         ## Create docks, place them into the window one at a time.
         ## Note that size arguments are only a suggestion; docks will still have to
         ## fill the entire dock area and obey the limits of their internal widgets.
-        d1 = Dock("Design parameters", size=(150, 1), closable=False)     ## give this dock the minimum possible size
+        self.d1 = Dock("Design parameters", size=(150, 1), closable=False) ## give this dock the minimum possible size
         self.d2 = Dock("Triangles", size=(400,300))
         self.d3 = Dock("Axial view", size=(400,300))
-        d4 = Dock("Radial view", size=(400,300))
-        d5 = Dock("G-H plane", size=(400,300))
-        d6 = Dock("3D blade", size=(400,300))
-        d7 = Dock("3D turbine", size=(400,300))
-        d8 = Dock("Acc. dist.", size=(400,200))
-        d9 = Dock("Energy dist.", size=(400,200))
-        d10 = Dock("Beta dist.", size=(400,200))
-        d11 = Dock("Thickness", size=(400,200))
-        d12 = Dock("Angle plot", size=(200,800))
-        d13 = Dock("Energy plot", size=(200,800))
-        d14 = Dock("CFD domain", size=(200,800))
-        d15 = Dock("LE/TE plot", size=(200,800))
+        self.d4 = Dock("Radial view", size=(400,300))
+        self.d5 = Dock("G-H plane", size=(400,300))
+        self.d6 = Dock("3D blade", size=(400,300))
+        self.d7 = Dock("3D turbine", size=(400,300))
+        self.d8 = Dock("Acc. dist.", size=(400,200))
+        self.d9 = Dock("Energy dist.", size=(400,200))
+        self.d10 = Dock("Beta dist.", size=(400,200))
+        self.d11 = Dock("Thickness", size=(400,200))
+        self.d12 = Dock("Angle plot", size=(200,800))
+        self.d13 = Dock("Energy plot", size=(200,800))
+        self.d14 = Dock("CFD domain", size=(200,800))
+        self.d15 = Dock("LE/TE plot", size=(200,800))
 
         ## Layout docks
-        self.area.addDock(d1,'left')
-        self.area.addDock(d12,'right')
-        self.area.addDock(self.d2,'right',d1)
-        self.area.addDock(d8,'bottom',self.d2)
+        self.area.addDock(self.d1,'left')
+        self.area.addDock(self.d12,'right')
+        self.area.addDock(self.d2,'right',self.d1)
+        self.area.addDock(self.d8,'bottom',self.d2)
         self.area.addDock(self.d3,'below',self.d2)
-        self.area.addDock(d4,'below',self.d2)
-        self.area.addDock(d5,'below',d4)
-        self.area.addDock(d6,'below',d5)
-        self.area.addDock(d7,'below',d6)
-        self.area.addDock(d9,'below',d8)
-        self.area.addDock(d10,'below',d9)
-        self.area.addDock(d11,'below',d10)
-        self.area.addDock(d13,'below',d12)
-        self.area.addDock(d14,'below',d13)
-        self.area.addDock(d15,'below',d14)
-
+        self.area.addDock(self.d4,'below',self.d2)
+        self.area.addDock(self.d5,'below',self.d4)
+        self.area.addDock(self.d6,'below',self.d5)
+        self.area.addDock(self.d7,'below',self.d6)
+        self.area.addDock(self.d9,'below',self.d8)
+        self.area.addDock(self.d10,'below',self.d9)
+        self.area.addDock(self.d11,'below',self.d10)
+        self.area.addDock(self.d13,'below',self.d12)
+        self.area.addDock(self.d14,'below',self.d13)
+        self.area.addDock(self.d15,'below',self.d14)
 
         ## Customize docks
-        d1.hideTitleBar()
+        self.d1.hideTitleBar()
         self.d3.raiseDock()
-        d8.raiseDock()
-
+        self.d8.raiseDock()
 
         # print(self.d2.isHidden(),self.d3.isHidden())
+
         ## Define widgets
-
-        # self.blade = Blade()
-        # self.params = Params()
-        self.params = DesignParameters(d1)
-
+        self.params = DesignParameters(self.d1)
 
         self.triangles = plotwidgets.TriangleWidget()
         self.axialView = plotwidgets.AxialViewWidget(self.params)
@@ -98,36 +94,29 @@ class Window(QtGui.QMainWindow):
         self.energyControl = plotwidgets.EnergyControlWidget(self.params)
         self.blade3D = plotwidgets.blade3DWidget(self.params)
 
-        # create dict of the various plotting axes
-        self.plotAxes = {'Axial View': self.axialView,
-                         'Triangles': self.triangles,
-                         'Acceleration': self.accelerationControl,
-                         'Beta Distribution': self.betaControl,
-                         'Energy Distribution': self.energyControl,
-                         'Radial View': self.radialView,
-                         'GH Plane': self.ghPlane,
-                         'Blade 3D': self.blade3D
-                         }
-
-        self.docks = {'Axial View': self.d3,
-                         'Triangles': self.d2
-                         }
-
-        # self.blade.setPlotAxes(self.plotAxes)
-        self.params.setPlotAxes(self.plotAxes)
-        self.params.setDocks(self.plotAxes)
-
+        # create dict of the various plotting axes and respective docks
+        self.dockWidgetDict = {'Param Tree': (self.params.tree, self.d1),
+                               'Axial View': (self.axialView, self.d3),
+                               'Triangles': (self.triangles, self.d2),
+                               'Acceleration': (self.accelerationControl, self.d8),
+                               'Beta Distribution': (self.betaControl, self.d10),
+                               'Energy Distribution': (self.energyControl, self.d9),
+                               'Radial View': (self.radialView, self.d4),
+                               'GH Plane': (self.ghPlane, self.d5),
+                               'Blade 3D': (self.blade3D, self.d6)
+                               }
 
         ## Add widgets into each dock
-        d1.addWidget(self.params.tree)
-        self.d2.addWidget(self.triangles)
-        self.d3.addWidget(self.axialView)
-        d4.addWidget(self.radialView)
-        d5.addWidget(self.ghPlane)
-        d6.addWidget(self.blade3D)
-        d8.addWidget(self.accelerationControl)
-        d9.addWidget(self.energyControl)
-        d10.addWidget(self.betaControl)
+        self.addDockContent(self.dockWidgetDict)
+
+        ## Pass axis references to Params (and later Blade)
+        self.params.setPlotAxes(self.dockWidgetDict)
+
+
+    def addDockContent(self,inputDict):
+        """ Add widgets to each dock according to input dict """
+        for key in inputDict:
+            inputDict[key][1].addWidget(inputDict[key][0])
 
 
     def create_actions(self):
