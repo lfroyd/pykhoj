@@ -54,7 +54,7 @@ class Blade(QtCore.QObject):
 
 
     def setPlotAxes(self,dockWidgetDict):
-        """ Define instance variables holding the reference to each graphic plotting area """
+        """ Define instance variables holding the reference to each graphic plotting area."""
         self.av['Axis'] = dockWidgetDict['Axial View'][0].axes
         self.av['Canvas'] = self.av['Axis'].figure.canvas
 
