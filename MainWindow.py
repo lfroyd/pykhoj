@@ -80,7 +80,7 @@ class Window(QtGui.QMainWindow):
         self.d3.raiseDock()
         self.d8.raiseDock()
 
-        # print(self.d2.isHidden(),self.d3.isHidden())
+        # print(self.d2.isHidden(),self.d3.isHidden())utl
 
         ## Define widgets
         self.params = DesignParameters(self.d1)

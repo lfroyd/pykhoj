@@ -112,7 +112,7 @@ class Blade(QtCore.QObject):
         self.Smat = np.zeros(shape=(self.np, self.ns))
 
         self.findArea()
-        self.calcCM()
+        # self.calcCM()
         self.setShroud()
         self.setInlet()
         self.calcStreamlines()
