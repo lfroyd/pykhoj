@@ -54,7 +54,7 @@ class Blade(QtCore.QObject):
 
 
     def setPlotAxes(self,dockWidgetDict):
-        """ Define instance variables holding the reference to each graphic plotting area."""
+        """ Define instance variables holding the reference to each graphic plotting area """
         self.av['Axis'] = dockWidgetDict['Axial View'][0].axes
         self.av['Canvas'] = self.av['Axis'].figure.canvas
 
@@ -202,14 +202,14 @@ class Blade(QtCore.QObject):
         """ Define logic w.r.t. truncation of blade defined by LE and TE bezier control curves """
 
         ## Find intersection between Trailing Edge (TE) and streamlines
-        end_index = np.zeros(self.ns)+(self.npa)
+        end_index = np.zeros(self.ns, dtype=int)+ int(self.npa)
         if self.TECurve is not None:
             if not self.TECurve.isRemoved:
                 r2 = np.empty(self.ns)
                 z2 = np.empty(self.ns)
                 TEr = np.asarray(self.TECurve.bezier_curve.get_xdata())
                 TEz = np.asarray(self.TECurve.bezier_curve.get_ydata())
-                for s in range(0,self.ns):
+                for s in range(0, int(self.ns)):
                     tmp = self.find_intersect_vec(self.RAmat[:,s], self.ZAmat[:,s], TEr, TEz)
                     r2[s] = tmp[0,0]
                     z2[s] = tmp[0,1]
@@ -218,18 +218,18 @@ class Blade(QtCore.QObject):
                     self.RAmat[end_index[s],s] = r2[s]
 
         ## Find intersection between Leading Edge (LE) and streamlines
-        start_index = np.zeros(self.ns)
+        start_index = np.zeros(self.ns, dtype=int)
         if self.LECurve is not None:
             if not self.LECurve.isRemoved:
                 r1 = np.empty(self.ns)
                 z1 = np.empty(self.ns)
                 LEr = np.asarray(self.LECurve.bezier_curve.get_xdata())
                 LEz = np.asarray(self.LECurve.bezier_curve.get_ydata())
-                for s in range(0, self.ns):
+                for s in range(0, int(self.ns)):
                     tmp = self.find_intersect_vec(self.RAmat[:, s], self.ZAmat[:, s], LEr, LEz)
                     r1[s] = tmp[0,0]
                     z1[s] = tmp[0,1]
-                    start_index[s] = np.searchsorted(self.D1*0.5-self.RAmat[:,s], self.D1*0.5-r1[s], side='right')
+                    start_index[s] = int(np.searchsorted(self.D1*0.5-self.RAmat[:,s], self.D1*0.5-r1[s], side='right'))
                     self.ZAmat[start_index[s],s] = z1[s]
                     self.RAmat[start_index[s],s] = r1[s]
 
@@ -238,7 +238,8 @@ class Blade(QtCore.QObject):
         ## The B-spline representation is fast, but does not always perfectly follow the original streamlines
         ## TODO: Maybe better fit could be achieved by tweaking the options, e.g. spline order?
         ## TODO: It would be good to add alternative approaches to this later, for the user to select
-        for s in range(0, self.ns):
+        for s in range(0, int(self.ns)):
+
             data = np.vstack((self.RAmat[start_index[s]:end_index[s]+1,s], self.ZAmat[start_index[s]:end_index[s]+1,s]))
             tck, u = interpolate.splprep(data)
             new = interpolate.splev(np.linspace(0, 1, self.np), tck)
